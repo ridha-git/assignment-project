@@ -47,8 +47,7 @@ class WhatsAppObserver {
 
 const { useState, useEffect } = React;
 
-// --- Helper: Avatar Generator (NEW) ---
-// Generates a unique avatar based on the username using DiceBear API
+// --- Helper: Avatar Generator ---
 const UserAvatar = ({ seed, className }) => (
     <img 
         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`} 
@@ -64,9 +63,11 @@ const ThemeToggle = ({ isDark, toggleTheme }) => (
     </button>
 );
 
-// --- PAGE 1: LOGIN & SIGN UP PAGE ---
-const LoginPage = ({ onLogin, isDark, toggleTheme }) => {
+// --- PAGE 1: LOGIN & SIGN UP PAGE (STRICT VALIDATION ADDED) ---
+const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme }) => {
     const [isRegistering, setIsRegistering] = useState(false);
+    
+    // Form States
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [fullName, setFullName] = useState("");
@@ -77,17 +78,42 @@ const LoginPage = ({ onLogin, isDark, toggleTheme }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const profile = {
-            name: isRegistering ? fullName : username,
-            username: username,
-            password: password,
-            email: isRegistering ? email : `${username}@example.com`,
-            phone: isRegistering ? phone : "60123456789",
-            type: userType,
-            rating: isRegistering ? "5.0" : "4.8", // Default rating
-            specialization: userType === 'freelancer' ? specialization : null
-        };
-        onLogin(profile);
+
+        if (isRegistering) {
+            // --- REGISTER LOGIC ---
+            if (username && password && fullName && phone) {
+                // Check if username already exists
+                if (existingUsers.find(u => u.username === username)) {
+                    alert("Username already exists! Please choose another.");
+                    return;
+                }
+
+                const newUser = {
+                    name: fullName,
+                    username: username,
+                    password: password,
+                    email: email,
+                    phone: phone,
+                    type: userType,
+                    rating: "5.0", // New users start with 5.0
+                    specialization: userType === 'freelancer' ? specialization : null
+                };
+                onSignup(newUser);
+            } else {
+                alert("Please fill in all fields to sign up.");
+            }
+        } else {
+            // --- LOGIN LOGIC (STRICT) ---
+            const foundUser = existingUsers.find(
+                u => u.username === username && u.password === password
+            );
+
+            if (foundUser) {
+                onLogin(foundUser);
+            } else {
+                alert("Invalid Username or Password. Please Sign Up if you don't have an account.");
+            }
+        }
     };
 
     return (
@@ -95,7 +121,10 @@ const LoginPage = ({ onLogin, isDark, toggleTheme }) => {
             <div className="absolute top-5 right-5"><ThemeToggle isDark={isDark} toggleTheme={toggleTheme} /></div>
             <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-96 animate-fade-in my-8">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">GigLink</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{isRegistering ? "Create Account" : "Welcome Back"}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                    {isRegistering ? "Create New Account" : "Login to Your Account"}
+                </p>
+                
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white" required />
                     <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white" required />
@@ -119,9 +148,23 @@ const LoginPage = ({ onLogin, isDark, toggleTheme }) => {
                             )}
                         </div>
                     )}
-                    <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold">{isRegistering ? "Sign Up" : "Login"}</button>
+                    <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold">
+                        {isRegistering ? "Sign Up" : "Login"}
+                    </button>
                 </form>
-                <button onClick={() => setIsRegistering(!isRegistering)} className="w-full mt-4 text-sm text-blue-500 underline">{isRegistering ? "Login instead" : "Create new account"}</button>
+
+                <button onClick={() => setIsRegistering(!isRegistering)} className="w-full mt-4 text-sm text-blue-500 underline">
+                    {isRegistering ? "Already have an account? Login" : "Don't have an account? Sign Up"}
+                </button>
+
+                {/* Hint for testing */}
+                {!isRegistering && (
+                    <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-500 dark:text-gray-400 text-center">
+                        <p><strong>Demo Login:</strong></p>
+                        <p>User: client1 | Pass: 123</p>
+                        <p>User: john | Pass: 123</p>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -160,11 +203,9 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
     );
 };
 
-// --- PAGE 3: FREELANCER DIRECTORY (With Search) ---
+// --- PAGE 3: FREELANCER DIRECTORY ---
 const FreelancerListPage = ({ freelancers, onDirectHire }) => {
     const [searchTerm, setSearchTerm] = useState("");
-
-    // Filter Logic
     const filteredFreelancers = freelancers.filter(fl => 
         fl.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         fl.specialization.toLowerCase().includes(searchTerm.toLowerCase())
@@ -174,18 +215,11 @@ const FreelancerListPage = ({ freelancers, onDirectHire }) => {
         <div className="max-w-6xl mx-auto p-6 animate-fade-in">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Find Talent</h2>
-                <input 
-                    type="text" 
-                    placeholder="Search by name or skill..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="p-2 border rounded dark:bg-gray-700 dark:text-white w-64"
-                />
+                <input type="text" placeholder="Search by name or skill..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="p-2 border rounded dark:bg-gray-700 dark:text-white w-64" />
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredFreelancers.map((fl, index) => (
-                    <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-700">
+                    <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
                         <div className="p-6">
                             <div className="flex items-center mb-4">
                                 <UserAvatar seed={fl.name} className="h-16 w-16" />
@@ -239,7 +273,7 @@ const InboxPage = ({ messages, onPayment }) => (
     </div>
 );
 
-// --- PAGE 5: CLIENT DASHBOARD (With Analytics) ---
+// --- PAGE 5: CLIENT DASHBOARD ---
 const ClientPage = ({ user, onOrderCreate, initialData, jobs }) => {
     const [serviceType, setServiceType] = useState('web');
     const [complexity, setComplexity] = useState('low');
@@ -247,7 +281,6 @@ const ClientPage = ({ user, onOrderCreate, initialData, jobs }) => {
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState(0);
 
-    // Analytics Calculation
     const myJobs = jobs.filter(j => j.postedBy === user.username);
     const totalSpent = myJobs.reduce((acc, curr) => acc + curr.total, 0);
 
@@ -280,7 +313,6 @@ const ClientPage = ({ user, onOrderCreate, initialData, jobs }) => {
 
     return (
         <div className="max-w-4xl mx-auto p-6 animate-fade-in">
-            {/* Dashboard Stats */}
             <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-white dark:bg-gray-800 p-4 rounded shadow border-l-4 border-blue-500">
                     <p className="text-gray-500 dark:text-gray-400 text-sm">Jobs Posted</p>
@@ -323,14 +355,11 @@ const ClientPage = ({ user, onOrderCreate, initialData, jobs }) => {
 // --- PAGE 6: FREELANCER JOB BOARD ---
 const FreelancerPage = ({ jobs, onAcceptJob, user }) => {
     const availableJobs = jobs.filter(job => job.status === "Open");
-    
-    // Analytics
     const myWork = jobs.filter(j => j.acceptedBy === user.name);
     const earnings = myWork.reduce((acc, curr) => acc + curr.total, 0);
 
     return (
         <div className="max-w-4xl mx-auto p-6 animate-fade-in">
-             {/* Dashboard Stats */}
              <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-white dark:bg-gray-800 p-4 rounded shadow border-l-4 border-purple-500">
                     <p className="text-gray-500 dark:text-gray-400 text-sm">Jobs Accepted</p>
@@ -371,29 +400,51 @@ const App = () => {
     const [isDarkMode, setIsDarkMode] = useState(false);
     
     // --- PERSISTENT STATE ---
+    // 1. Jobs
     const [jobs, setJobs] = useState(() => JSON.parse(localStorage.getItem('giglink_jobs')) || []);
+    // 2. Messages
     const [messages, setMessages] = useState(() => JSON.parse(localStorage.getItem('giglink_messages')) || []);
+    // 3. Registered Users (Auth) - Pre-seeded with 2 users for testing
+    const [users, setUsers] = useState(() => JSON.parse(localStorage.getItem('giglink_users')) || [
+        { name: "Demo Client", username: "client1", password: "123", email: "client@test.com", type: "client", phone: "123456" },
+        { name: "John Doe", username: "john", password: "123", email: "john@test.com", type: "freelancer", phone: "123456", rating: "4.8", specialization: "Web Development" }
+    ]);
+    // 4. Freelancer Directory (Synced with users)
     const [allFreelancers, setAllFreelancers] = useState(() => JSON.parse(localStorage.getItem('giglink_freelancers')) || [
         { name: "John Doe", rating: "4.8", specialization: "Web Development" },
-        { name: "Jane Smith", rating: "4.9", specialization: "Graphic Design" },
-        { name: "Ali Bin Abu", rating: "4.7", specialization: "Content Writing" }
+        { name: "Jane Smith", rating: "4.9", specialization: "Graphic Design" }
     ]);
+    
     const [directHireData, setDirectHireData] = useState(null);
 
-    // Save to LocalStorage whenever data changes
+    // Save to LocalStorage
     useEffect(() => { localStorage.setItem('giglink_jobs', JSON.stringify(jobs)); }, [jobs]);
     useEffect(() => { localStorage.setItem('giglink_messages', JSON.stringify(messages)); }, [messages]);
+    useEffect(() => { localStorage.setItem('giglink_users', JSON.stringify(users)); }, [users]);
     useEffect(() => { localStorage.setItem('giglink_freelancers', JSON.stringify(allFreelancers)); }, [allFreelancers]);
 
     const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
     const handleLogin = (profile) => {
         setUser(profile);
-        if (profile.type === 'freelancer') {
-            const exists = allFreelancers.find(f => f.name === profile.name);
-            if (!exists) setAllFreelancers([...allFreelancers, { name: profile.name, rating: profile.rating, specialization: profile.specialization }]);
-        }
         setPage(profile.type === 'client' ? 'client-home' : 'freelancer-home');
+    };
+
+    const handleSignup = (newUser) => {
+        // 1. Add to Auth Users
+        setUsers([...users, newUser]);
+        
+        // 2. If Freelancer, Add to Directory
+        if (newUser.type === 'freelancer') {
+            setAllFreelancers([...allFreelancers, {
+                name: newUser.name,
+                rating: newUser.rating,
+                specialization: newUser.specialization
+            }]);
+        }
+        
+        // 3. Auto Login
+        handleLogin(newUser);
     };
 
     const handleLogout = () => { setUser(null); setPage('login'); };
@@ -471,7 +522,15 @@ const App = () => {
                     </nav>
                 )}
 
-                {page === 'login' && <LoginPage onLogin={handleLogin} isDark={isDarkMode} toggleTheme={toggleTheme} />}
+                {page === 'login' && (
+                    <LoginPage 
+                        onLogin={handleLogin} 
+                        onSignup={handleSignup} 
+                        existingUsers={users}
+                        isDark={isDarkMode} 
+                        toggleTheme={toggleTheme} 
+                    />
+                )}
                 {page === 'profile' && <ProfilePage user={user} onUpdateProfile={setUser} />}
                 {page === 'client-home' && <ClientPage user={user} onOrderCreate={handleOrderCreate} initialData={directHireData} jobs={jobs} />}
                 {page === 'freelancer-list' && <FreelancerListPage freelancers={allFreelancers} onDirectHire={handleDirectHire} />}
