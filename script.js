@@ -55,7 +55,7 @@ const Toast = ({ message, type, onClose }) => {
     );
 };
 
-// --- 2. PAYMENT MODAL (REALISTIC ENVIRONMENT) ---
+// --- 2. PAYMENT MODAL ---
 const PaymentModal = ({ isOpen, onClose, onConfirm, amount, recipient }) => {
     if (!isOpen) return null;
     const [processing, setProcessing] = useState(false);
@@ -63,7 +63,6 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, recipient }) => {
     const handlePay = (e) => {
         e.preventDefault();
         setProcessing(true);
-        // Simulate Bank Processing Delay
         setTimeout(() => {
             setProcessing(false);
             onConfirm();
@@ -74,12 +73,9 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, recipient }) => {
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl w-96 border border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center">
-                        <span className="mr-2">💳</span> Secure Payment
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center"><span className="mr-2">💳</span> Secure Payment</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-red-500 text-xl">&times;</button>
                 </div>
-                
                 <div className="mb-6 p-4 bg-blue-50 dark:bg-gray-900 rounded-lg border border-blue-100 dark:border-gray-700">
                     <p className="text-sm text-gray-500 dark:text-gray-400">Paying to:</p>
                     <p className="font-bold text-gray-800 dark:text-white text-lg">{recipient}</p>
@@ -88,35 +84,14 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, recipient }) => {
                         <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">RM {amount.toFixed(2)}</p>
                     </div>
                 </div>
-
                 <form onSubmit={handlePay} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase">Card Number</label>
-                        <div className="relative">
-                            <input type="text" placeholder="0000 0000 0000 0000" className="w-full pl-10 p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none" required />
-                            <span className="absolute left-3 top-3 text-gray-400">🔢</span>
-                        </div>
-                    </div>
+                    <input type="text" placeholder="Card Number" className="w-full p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
                     <div className="flex space-x-4">
-                        <div className="w-1/2">
-                            <label className="block text-xs font-bold text-gray-500 uppercase">Expiry</label>
-                            <input type="text" placeholder="MM/YY" className="w-full p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none" required />
-                        </div>
-                        <div className="w-1/2">
-                            <label className="block text-xs font-bold text-gray-500 uppercase">CVV</label>
-                            <input type="password" placeholder="123" className="w-full p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none" required />
-                        </div>
+                        <input type="text" placeholder="MM/YY" className="w-1/2 p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+                        <input type="password" placeholder="CVV" className="w-1/2 p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
                     </div>
-                    
-                    <button 
-                        type="submit" 
-                        disabled={processing}
-                        className={`w-full py-3 rounded-lg text-white font-bold text-lg shadow-lg transition-all transform hover:-translate-y-1 ${processing ? 'bg-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'}`}
-                    >
-                        {processing ? "Processing..." : `Pay RM ${amount.toFixed(2)}`}
-                    </button>
+                    <button type="submit" disabled={processing} className={`w-full py-3 rounded-lg text-white font-bold text-lg shadow-lg ${processing ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'}`}>{processing ? "Processing..." : "Confirm Payment"}</button>
                 </form>
-                <p className="text-center text-xs text-gray-400 mt-4">🔒 Encrypted with 256-bit SSL</p>
             </div>
         </div>
     );
@@ -132,10 +107,16 @@ const LoadingButton = ({ onClick, isLoading, text, className, type = "button" })
     </button>
 );
 
-// --- 4. AVATAR COMPONENT ---
-const UserAvatar = ({ seed, className }) => (
-    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`} alt="avatar" className={`rounded-full border-2 border-white shadow-sm ${className}`} />
-);
+// --- 4. AVATAR COMPONENT (UPDATED: Supports Custom Image) ---
+const UserAvatar = ({ user, className }) => {
+    // If user has a custom image, use it. Otherwise, use DiceBear with their username as seed.
+    if (user?.avatarType === 'image' && user.avatarImage) {
+        return <img src={user.avatarImage} alt="avatar" className={`rounded-full border-2 border-white shadow-sm object-cover ${className}`} />;
+    }
+    // Fallback or Cartoon
+    const seed = user?.username || "default";
+    return <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`} alt="avatar" className={`rounded-full border-2 border-white shadow-sm ${className}`} />;
+};
 
 // --- 5. THEME TOGGLE ---
 const ThemeToggle = ({ isDark, toggleTheme }) => (
@@ -171,7 +152,12 @@ const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme, show
                     if (existingUsers.find(u => u.username === username)) {
                         showToast("Username already taken", "error"); setIsLoading(false); return;
                     }
-                    onSignup({ name: fullName, username, password, email, phone, type: userType, rating: "5.0", specialization: userType === 'freelancer' ? specialization : null });
+                    // Default avatar is cartoon
+                    onSignup({ 
+                        name: fullName, username, password, email, phone, type: userType, 
+                        rating: "5.0", specialization: userType === 'freelancer' ? specialization : null,
+                        avatarType: 'cartoon' 
+                    });
                     showToast("Account Created Successfully!", "success");
                 } else showToast("Please fill all fields", "error");
             } else {
@@ -211,30 +197,22 @@ const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme, show
                             )}
                         </div>
                     )}
-                    <LoadingButton type="submit" isLoading={isLoading} text={isRegistering ? "Create Account" : "Login"} className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-bold shadow-lg transform transition hover:-translate-y-0.5" />
+                    <LoadingButton type="submit" isLoading={isLoading} text={isRegistering ? "Create Account" : "Login"} className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-bold shadow-lg" />
                 </form>
 
-                <div className="mt-6 text-center">
-                    <button onClick={() => setIsRegistering(!isRegistering)} className="text-sm text-blue-600 dark:text-blue-400 font-semibold hover:underline">
-                        {isRegistering ? "Already have an account? Login" : "Don't have an account? Sign Up"}
-                    </button>
-                </div>
+                <div className="mt-6 text-center"><button onClick={() => setIsRegistering(!isRegistering)} className="text-sm text-blue-600 dark:text-blue-400 font-semibold hover:underline">{isRegistering ? "Already have an account? Login" : "Don't have an account? Sign Up"}</button></div>
                 {!isRegistering && (
                     <div className="mt-6 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg text-xs text-center text-gray-500 dark:text-gray-400">
-                        <p className="font-bold mb-1">Demo Credentials:</p>
-                        <p>User: <span className="font-mono bg-gray-200 dark:bg-gray-600 px-1 rounded">client1</span> Pass: <span className="font-mono bg-gray-200 dark:bg-gray-600 px-1 rounded">123</span></p>
-                        <p className="mt-1">User: <span className="font-mono bg-gray-200 dark:bg-gray-600 px-1 rounded">john</span> Pass: <span className="font-mono bg-gray-200 dark:bg-gray-600 px-1 rounded">123</span></p>
+                        <p className="font-bold">Demo Login: client1 / 123 OR john / 123</p>
                     </div>
                 )}
-                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-center">
-                    <button onClick={handleReset} className="text-xs text-red-400 hover:text-red-600 transition-colors">⚠ Reset Database</button>
-                </div>
+                <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-center"><button onClick={handleReset} className="text-xs text-red-400 hover:text-red-600">⚠ Reset Database</button></div>
             </div>
         </div>
     );
 };
 
-// --- PAGE: PROFILE ---
+// --- PAGE: PROFILE (UPDATED: CUSTOM PICTURE) ---
 const ProfilePage = ({ user, onUpdateProfile, showToast }) => {
     const [formData, setFormData] = useState(user);
     const [isLoading, setIsLoading] = useState(false);
@@ -249,34 +227,51 @@ const ProfilePage = ({ user, onUpdateProfile, showToast }) => {
         }, 800);
     };
 
+    // Handle Image Upload (Convert to Base64)
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 500000) { // Limit 500kb
+                showToast("Image too large! Max 500kb", "error");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData({ ...formData, avatarType: 'image', avatarImage: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     return (
         <div className="max-w-3xl mx-auto p-6 animate-fade-in">
             <h2 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">Profile Settings</h2>
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
                 <div className="flex flex-col md:flex-row items-center mb-8 pb-8 border-b border-gray-100 dark:border-gray-700">
-                    <UserAvatar seed={formData.username} className="h-28 w-28 md:mr-6 mb-4 md:mb-0" />
+                    <div className="relative group">
+                        <UserAvatar user={formData} className="h-28 w-28 md:mr-6 mb-4 md:mb-0" />
+                        <label className="absolute bottom-0 right-6 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 shadow-md">
+                            📷 <input type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
+                        </label>
+                    </div>
                     <div className="text-center md:text-left">
                         <h3 className="text-2xl font-bold dark:text-white">{formData.name}</h3>
                         <p className="text-gray-500 dark:text-gray-400 font-medium capitalize flex items-center justify-center md:justify-start">
                            <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-xs uppercase tracking-wider">{formData.type}</span>
                         </p>
+                        <div className="mt-2 text-sm">
+                            <span className="text-gray-400 mr-2">Avatar Mode:</span>
+                            <button type="button" onClick={() => setFormData({...formData, avatarType: 'cartoon'})} className={`px-2 py-1 rounded text-xs mr-2 border ${formData.avatarType === 'cartoon' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'text-gray-500 border-gray-200'}`}>Cartoon</button>
+                            <button type="button" onClick={() => document.querySelector('input[type=file]').click()} className={`px-2 py-1 rounded text-xs border ${formData.avatarType === 'image' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'text-gray-500 border-gray-200'}`}>Custom</button>
+                        </div>
                     </div>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
-                            <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
-                            <input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none" />
-                        </div>
+                        <div><label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Full Name</label><input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600" /></div>
+                        <div><label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone</label><input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600" /></div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
-                        <input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none" />
-                    </div>
+                    <div><label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Email</label><input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600" /></div>
                     <LoadingButton type="submit" isLoading={isLoading} text="Save Changes" className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold shadow-md" />
                 </form>
             </div>
@@ -292,27 +287,18 @@ const FreelancerListPage = ({ freelancers, onDirectHire }) => {
     return (
         <div className="max-w-7xl mx-auto p-6 animate-fade-in">
             <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">Explore Talent</h2>
-                <div className="relative w-full md:w-72">
-                    <input type="text" placeholder="Search by name or skill..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 p-3 rounded-full border dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white shadow-sm focus:ring-2 ring-blue-500 outline-none" />
-                    <span className="absolute left-3 top-3.5 text-gray-400">🔍</span>
-                </div>
+                <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Explore Talent</h2>
+                <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full md:w-72 p-3 rounded-full border dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white shadow-sm" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filtered.map((fl, index) => (
                     <div key={index} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-all transform hover:-translate-y-1">
                         <div className="p-6 text-center">
-                            <UserAvatar seed={fl.name} className="h-24 w-24 mx-auto mb-4" />
+                            <UserAvatar user={fl} className="h-24 w-24 mx-auto mb-4" />
                             <h3 className="text-xl font-bold text-gray-800 dark:text-white">{fl.name}</h3>
                             <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-4">{fl.specialization}</p>
-                            <div className="flex justify-center items-center space-x-2 bg-gray-50 dark:bg-gray-700/50 py-2 rounded-lg mb-4">
-                                <span className="text-yellow-500 text-lg">⭐ {fl.rating}</span>
-                                <span className="text-gray-300">|</span>
-                                <span className="text-xs text-green-500 font-bold uppercase tracking-wide">Verified Pro</span>
-                            </div>
-                            <button onClick={() => onDirectHire(fl)} className="w-full bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center justify-center">
-                                Hire Talent <span className="ml-2">🚀</span>
-                            </button>
+                            <div className="flex justify-center items-center space-x-2 bg-gray-50 dark:bg-gray-700/50 py-2 rounded-lg mb-4"><span className="text-yellow-500">⭐ {fl.rating}</span><span className="text-xs text-green-500 font-bold uppercase">Verified</span></div>
+                            <button onClick={() => onDirectHire(fl)} className="w-full bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-800 transition-colors">Hire Talent 🚀</button>
                         </div>
                     </div>
                 ))}
@@ -321,53 +307,22 @@ const FreelancerListPage = ({ freelancers, onDirectHire }) => {
     );
 };
 
-// --- PAGE: INBOX (UPDATED: New Messages at Top + WhatsApp Pretext) ---
-const InboxPage = ({ messages, onPaymentRequest, showToast }) => {
+// --- PAGE: INBOX ---
+const InboxPage = ({ messages, onPaymentRequest }) => {
     return (
         <div className="max-w-4xl mx-auto p-6 animate-fade-in">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Messages</h2>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden min-h-[400px] border border-gray-100 dark:border-gray-700">
-                {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full py-20 text-gray-400">
-                        <div className="bg-gray-100 dark:bg-gray-700 p-6 rounded-full mb-4 text-4xl">📭</div>
-                        <p className="text-lg font-medium">No messages yet.</p>
-                        <p className="text-sm">Notifications and chats will appear here.</p>
-                    </div>
-                ) : (
+                {messages.length === 0 ? <div className="flex flex-col items-center justify-center h-full py-20 text-gray-400"><div className="text-4xl mb-2">📭</div><p>No messages yet.</p></div> : (
                     <ul className="divide-y divide-gray-100 dark:divide-gray-700">
                         {messages.map((msg) => (
                             <li key={msg.id} className="p-6 hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex items-center">
-                                        <div className={`h-2 w-2 rounded-full mr-3 ${msg.isPaid ? 'bg-green-500' : 'bg-blue-500'}`}></div>
-                                        <span className="font-bold text-gray-800 dark:text-white text-lg">{msg.title}</span>
-                                    </div>
-                                    <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{new Date(msg.id).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                </div>
+                                <div className="flex justify-between items-start mb-2"><div className="flex items-center"><div className={`h-2 w-2 rounded-full mr-3 ${msg.isPaid ? 'bg-green-500' : 'bg-blue-500'}`}></div><span className="font-bold text-gray-800 dark:text-white text-lg">{msg.title}</span></div><span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{new Date(msg.id).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>
                                 <p className="text-gray-600 dark:text-gray-300 mb-4 ml-5 leading-relaxed">{msg.text}</p>
                                 {msg.isActionable && (
                                     <div className="ml-5 flex flex-wrap gap-3">
-                                        {/* WHATSAPP WITH PRE-FILLED MESSAGE */}
-                                        <a 
-                                            href={`https://wa.me/${msg.freelancerPhone ? msg.freelancerPhone.replace(/\D/g,'') : ''}?text=${encodeURIComponent(`Hi, I'm contacting you regarding the job: ${msg.jobTitle}.`)}`} 
-                                            target="_blank" 
-                                            className="flex items-center bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-lg shadow-md transition-transform transform hover:scale-105 font-medium"
-                                        >
-                                            <span className="mr-2 text-lg">💬</span> Chat on WhatsApp
-                                        </a>
-                                        
-                                        {!msg.isPaid ? (
-                                            <button 
-                                                onClick={() => onPaymentRequest(msg)} 
-                                                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md transition-transform transform hover:scale-105 font-medium"
-                                            >
-                                                <span className="mr-2 text-lg">💳</span> Pay RM {msg.amount.toFixed(2)}
-                                            </button>
-                                        ) : (
-                                            <span className="flex items-center text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 font-bold px-5 py-2.5 rounded-lg border border-green-200 dark:border-green-800 cursor-default">
-                                                ✅ Payment Verified
-                                            </span>
-                                        )}
+                                        <a href={`https://wa.me/${msg.freelancerPhone ? msg.freelancerPhone.replace(/\D/g,'') : ''}?text=${encodeURIComponent(`Hi, I'm contacting you regarding the job: ${msg.jobTitle}.`)}`} target="_blank" className="flex items-center bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-lg shadow-md transition-transform transform hover:scale-105 font-medium"><span className="mr-2 text-lg">💬</span> Chat on WhatsApp</a>
+                                        {!msg.isPaid ? <button onClick={() => onPaymentRequest(msg)} className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md transition-transform transform hover:scale-105 font-medium"><span className="mr-2 text-lg">💳</span> Pay RM {msg.amount.toFixed(2)}</button> : <span className="flex items-center text-green-600 bg-green-100 dark:bg-green-900/30 font-bold px-5 py-2.5 rounded-lg border border-green-200">✅ Paid</span>}
                                     </div>
                                 )}
                             </li>
@@ -379,7 +334,7 @@ const InboxPage = ({ messages, onPaymentRequest, showToast }) => {
     );
 };
 
-// --- PAGE: CLIENT POST JOB ---
+// --- PAGE: CLIENT POST JOB (UPDATED: DIRECT OFFER VISUAL) ---
 const ClientPage = ({ user, onOrderCreate, initialData, jobs, showToast }) => {
     const [serviceType, setServiceType] = useState('web');
     const [complexity, setComplexity] = useState('low');
@@ -387,6 +342,7 @@ const ClientPage = ({ user, onOrderCreate, initialData, jobs, showToast }) => {
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [targetFreelancer, setTargetFreelancer] = useState(null);
 
     const myJobs = jobs.filter(j => j.postedBy === user.username);
     const totalSpent = myJobs.reduce((acc, curr) => acc + curr.total, 0);
@@ -394,6 +350,7 @@ const ClientPage = ({ user, onOrderCreate, initialData, jobs, showToast }) => {
     useEffect(() => {
         if (initialData && initialData.freelancerName) {
             setDescription(`DIRECT OFFER FOR: ${initialData.freelancerName}.\n\nProject details: `);
+            setTargetFreelancer(initialData.freelancerName);
             if(initialData.specialization.includes("Web")) setServiceType('web');
         }
     }, [initialData]);
@@ -409,7 +366,8 @@ const ClientPage = ({ user, onOrderCreate, initialData, jobs, showToast }) => {
         setTimeout(() => {
             onOrderCreate({
                 id: Date.now(), user: user, email: user.email, service: ServiceFactory.createService(serviceType).name,
-                total: price, description: description, status: "Open", postedBy: user.username 
+                total: price, description: description, status: "Open", postedBy: user.username,
+                targetFreelancer: targetFreelancer // Pass target for direct offers
             });
             showToast("Job Posted Successfully!", "success");
             setIsLoading(false);
@@ -418,70 +376,46 @@ const ClientPage = ({ user, onOrderCreate, initialData, jobs, showToast }) => {
 
     return (
         <div className="max-w-5xl mx-auto p-6 animate-fade-in">
-            {/* Dashboard Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-6 rounded-2xl shadow-lg text-white">
-                    <p className="text-blue-100 text-sm font-medium uppercase tracking-wider">Active Jobs</p>
-                    <p className="text-4xl font-extrabold mt-1">{myJobs.length}</p>
-                </div>
-                <div className="bg-gradient-to-br from-emerald-500 to-teal-700 p-6 rounded-2xl shadow-lg text-white">
-                    <p className="text-emerald-100 text-sm font-medium uppercase tracking-wider">Total Value</p>
-                    <p className="text-4xl font-extrabold mt-1">RM {totalSpent.toFixed(2)}</p>
-                </div>
+                <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-6 rounded-2xl shadow-lg text-white"><p className="text-blue-100 text-sm font-medium uppercase">Active Jobs</p><p className="text-4xl font-extrabold mt-1">{myJobs.length}</p></div>
+                <div className="bg-gradient-to-br from-emerald-500 to-teal-700 p-6 rounded-2xl shadow-lg text-white"><p className="text-emerald-100 text-sm font-medium uppercase">Total Value</p><p className="text-4xl font-extrabold mt-1">RM {totalSpent.toFixed(2)}</p></div>
             </div>
 
             <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Create New Project</h2>
+            {targetFreelancer && (
+                <div className="mb-6 bg-purple-100 dark:bg-purple-900/30 border-l-4 border-purple-500 p-4 rounded text-purple-800 dark:text-purple-300">
+                    <p className="font-bold">🔒 Private Offer</p>
+                    <p>This job will only be visible to freelancer: <strong>{targetFreelancer}</strong></p>
+                </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Service Type</label>
-                            <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none">
-                                <option value="web">Web Development</option><option value="design">Graphic Design</option><option value="content">Content Writing</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Complexity</label>
-                            <select value={complexity} onChange={(e) => setComplexity(e.target.value)} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none">
-                                <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
-                            </select>
-                        </div>
+                        <div><label className="block text-sm font-bold dark:text-white mb-2">Service Type</label><select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600"><option value="web">Web Development</option><option value="design">Graphic Design</option><option value="content">Content Writing</option></select></div>
+                        <div><label className="block text-sm font-bold dark:text-white mb-2">Complexity</label><select value={complexity} onChange={(e) => setComplexity(e.target.value)} className="w-full p-3 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
                     </div>
-                    <div>
-                        <div className="flex justify-between mb-2">
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Duration Estimate</label>
-                            <span className="text-blue-600 dark:text-blue-400 font-bold">{hours} Hours</span>
-                        </div>
-                        <input type="range" min="1" max="100" value={hours} onChange={(e) => setHours(Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" />
-                    </div>
-                    <div>
-                         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Project Description</label>
-                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your project requirements in detail..." className="w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-2 ring-blue-500 outline-none h-32 resize-none"></textarea>
-                    </div>
+                    <div><div className="flex justify-between mb-2"><label className="block text-sm font-bold dark:text-white">Duration</label><span className="text-blue-600 dark:text-blue-400 font-bold">{hours} Hours</span></div><input type="range" min="1" max="100" value={hours} onChange={(e) => setHours(Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" /></div>
+                    <div><label className="block text-sm font-bold dark:text-white mb-2">Description</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe requirements..." className="w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 h-32 resize-none"></textarea></div>
                 </div>
-
                 <div className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 p-8 rounded-2xl shadow-xl flex flex-col justify-between h-full">
-                    <div>
-                        <h3 className="text-xl font-bold opacity-90">Estimated Cost</h3>
-                        <p className="text-5xl font-extrabold mt-4">RM {price.toFixed(2)}</p>
-                        <p className="text-sm opacity-60 mt-2">Includes service fees & taxes</p>
-                        <div className="mt-8 space-y-2 text-sm opacity-80">
-                            <div className="flex justify-between"><span>Base Rate:</span><span>Standard</span></div>
-                            <div className="flex justify-between"><span>Duration:</span><span>{hours} Hrs</span></div>
-                            <div className="flex justify-between"><span>Support:</span><span>24/7</span></div>
-                        </div>
-                    </div>
-                    <LoadingButton onClick={handleBooking} isLoading={isLoading} text="Post Job Now" className="w-full bg-blue-600 text-white hover:bg-blue-500 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 font-bold py-4 rounded-xl mt-8 text-lg shadow-lg" />
+                    <div><h3 className="text-xl font-bold opacity-90">Estimated Cost</h3><p className="text-5xl font-extrabold mt-4">RM {price.toFixed(2)}</p></div>
+                    <LoadingButton onClick={handleBooking} isLoading={isLoading} text={targetFreelancer ? "Send Private Offer" : "Post Job Now"} className="w-full bg-blue-600 text-white hover:bg-blue-500 dark:bg-blue-600 dark:text-white font-bold py-4 rounded-xl mt-8 text-lg shadow-lg" />
                 </div>
             </div>
         </div>
     );
 };
 
-// --- PAGE: FREELANCER BOARD ---
+// --- PAGE: FREELANCER BOARD (UPDATED: FILTER DIRECT OFFERS) ---
 const FreelancerPage = ({ jobs, onAcceptJob, user, showToast }) => {
     const [acceptingId, setAcceptingId] = useState(null);
-    const availableJobs = jobs.filter(job => job.status === "Open");
+    
+    // Logic: Show Open jobs that are either PUBLIC (no target) OR Targeted to THIS user
+    const availableJobs = jobs.filter(job => 
+        job.status === "Open" && 
+        (!job.targetFreelancer || job.targetFreelancer === user.name)
+    );
+    
     const myWork = jobs.filter(j => j.acceptedBy === user.name);
     const earnings = myWork.reduce((acc, curr) => acc + curr.total, 0);
 
@@ -490,46 +424,29 @@ const FreelancerPage = ({ jobs, onAcceptJob, user, showToast }) => {
         setTimeout(() => {
             onAcceptJob(id, user);
             setAcceptingId(null);
-            showToast("Job Accepted! Check 'Jobs' tab.", "success");
+            showToast("Job Accepted!", "success");
         }, 1000);
     };
 
     return (
         <div className="max-w-6xl mx-auto p-6 animate-fade-in">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-purple-500 to-indigo-700 p-6 rounded-2xl shadow-lg text-white">
-                    <p className="text-purple-100 text-sm font-medium uppercase tracking-wider">Jobs Accepted</p>
-                    <p className="text-4xl font-extrabold mt-1">{myWork.length}</p>
-                </div>
-                <div className="bg-gradient-to-br from-green-500 to-emerald-700 p-6 rounded-2xl shadow-lg text-white">
-                    <p className="text-green-100 text-sm font-medium uppercase tracking-wider">Total Earnings</p>
-                    <p className="text-4xl font-extrabold mt-1">RM {earnings.toFixed(2)}</p>
-                </div>
+                <div className="bg-gradient-to-br from-purple-500 to-indigo-700 p-6 rounded-2xl shadow-lg text-white"><p className="text-purple-100 text-sm font-medium uppercase">Jobs Accepted</p><p className="text-4xl font-extrabold mt-1">{myWork.length}</p></div>
+                <div className="bg-gradient-to-br from-green-500 to-emerald-700 p-6 rounded-2xl shadow-lg text-white"><p className="text-green-100 text-sm font-medium uppercase">Total Earnings</p><p className="text-4xl font-extrabold mt-1">RM {earnings.toFixed(2)}</p></div>
             </div>
             
             <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Available Opportunities</h2>
-            {availableJobs.length === 0 ? (
-                <div className="text-center py-20 bg-white/50 dark:bg-gray-800/50 rounded-3xl border border-dashed border-gray-300 dark:border-gray-700">
-                    <div className="text-6xl mb-4">🔭</div>
-                    <p className="text-xl font-medium text-gray-600 dark:text-gray-300">No open jobs found.</p>
-                    <p className="text-gray-500">Check back later for new opportunities!</p>
-                </div>
-            ) : (
+            {availableJobs.length === 0 ? <div className="text-center py-20 bg-white/50 dark:bg-gray-800/50 rounded-3xl"><div className="text-6xl mb-4">🔭</div><p className="text-xl font-medium text-gray-600 dark:text-gray-300">No open jobs found.</p></div> : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {availableJobs.map(job => (
-                        <div key={job.id} className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-all hover:-translate-y-1 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">{job.service}</div>
+                        <div key={job.id} className={`p-8 rounded-2xl shadow-lg border hover:shadow-2xl transition-all hover:-translate-y-1 relative overflow-hidden ${job.targetFreelancer ? 'bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}>
+                            {job.targetFreelancer && <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">🔒 Direct Offer</div>}
                             <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">{job.service}</h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Posted by <span className="font-semibold text-gray-700 dark:text-gray-200">{job.postedBy}</span></p>
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl mb-6">
-                                <p className="text-gray-600 dark:text-gray-300 italic">"{job.description}"</p>
-                            </div>
+                            <div className="bg-white/50 dark:bg-gray-700/50 p-4 rounded-xl mb-6"><p className="text-gray-600 dark:text-gray-300 italic">"{job.description}"</p></div>
                             <div className="flex justify-between items-center">
-                                <div>
-                                    <p className="text-xs text-gray-400 uppercase font-bold">Payout</p>
-                                    <p className="text-2xl font-extrabold text-green-600 dark:text-green-400">RM {job.total.toFixed(2)}</p>
-                                </div>
-                                <LoadingButton onClick={() => handleAccept(job.id)} isLoading={acceptingId === job.id} text="Accept Job" className="bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-200 shadow-md" />
+                                <div><p className="text-xs text-gray-400 uppercase font-bold">Payout</p><p className="text-2xl font-extrabold text-green-600 dark:text-green-400">RM {job.total.toFixed(2)}</p></div>
+                                <LoadingButton onClick={() => handleAccept(job.id)} isLoading={acceptingId === job.id} text="Accept Job" className="bg-gray-900 dark:bg-white dark:text-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 shadow-md" />
                             </div>
                         </div>
                     ))}
@@ -545,24 +462,20 @@ const App = () => {
     const [user, setUser] = useState(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [toast, setToast] = useState(null);
-    
-    // --- PAYMENT MODAL STATE ---
     const [paymentModal, setPaymentModal] = useState({ isOpen: false, msg: null });
 
-    // --- PERSISTENT STATE ---
+    // Persistent State
     const [jobs, setJobs] = useState(() => JSON.parse(localStorage.getItem('giglink_jobs')) || []);
     const [messages, setMessages] = useState(() => JSON.parse(localStorage.getItem('giglink_messages')) || []);
     const [users, setUsers] = useState(() => JSON.parse(localStorage.getItem('giglink_users')) || [
-        { name: "Demo Client", username: "client1", password: "123", email: "client@test.com", type: "client", phone: "123456" },
-        { name: "John Doe", username: "john", password: "123", email: "john@test.com", type: "freelancer", phone: "123456", rating: "4.8", specialization: "Web Development" }
+        { name: "Demo Client", username: "client1", password: "123", email: "client@test.com", type: "client", phone: "123456", avatarType: 'cartoon' },
+        { name: "John Doe", username: "john", password: "123", email: "john@test.com", type: "freelancer", phone: "123456", rating: "4.8", specialization: "Web Development", avatarType: 'cartoon' }
     ]);
     const [allFreelancers, setAllFreelancers] = useState(() => JSON.parse(localStorage.getItem('giglink_freelancers')) || [
-        { name: "John Doe", rating: "4.8", specialization: "Web Development" },
-        { name: "Jane Smith", rating: "4.9", specialization: "Graphic Design" }
+        { name: "John Doe", rating: "4.8", specialization: "Web Development", username: "john" }
     ]);
     const [directHireData, setDirectHireData] = useState(null);
 
-    // Save Data
     useEffect(() => { localStorage.setItem('giglink_jobs', JSON.stringify(jobs)); }, [jobs]);
     useEffect(() => { localStorage.setItem('giglink_messages', JSON.stringify(messages)); }, [messages]);
     useEffect(() => { localStorage.setItem('giglink_users', JSON.stringify(users)); }, [users]);
@@ -574,7 +487,7 @@ const App = () => {
     const handleLogin = (profile) => { setUser(profile); setPage(profile.type === 'client' ? 'client-home' : 'freelancer-home'); };
     const handleSignup = (newUser) => {
         setUsers([...users, newUser]);
-        if (newUser.type === 'freelancer') setAllFreelancers([...allFreelancers, { name: newUser.name, rating: newUser.rating, specialization: newUser.specialization }]);
+        if (newUser.type === 'freelancer') setAllFreelancers([...allFreelancers, { name: newUser.name, rating: newUser.rating, specialization: newUser.specialization, username: newUser.username }]);
         handleLogin(newUser);
     };
     const handleLogout = () => { setUser(null); setPage('login'); };
@@ -590,7 +503,6 @@ const App = () => {
         setPage('client-home');
     };
 
-    // --- FREELANCER ACCEPTS JOB ---
     const handleAcceptJob = (jobId, freelancerUser) => {
         const updatedJobs = jobs.map(job => job.id === jobId ? { ...job, status: 'Accepted', acceptedBy: freelancerUser.name } : job);
         setJobs(updatedJobs);
@@ -602,41 +514,24 @@ const App = () => {
             isActionable: true, isPaid: false, freelancerPhone: freelancerUser.phone, amount: acceptedJob.total, 
             jobId: acceptedJob.id, jobTitle: acceptedJob.service, freelancerName: freelancerUser.name
         };
-        // UPDATED: Prepend to top
         setMessages([newMessage, ...messages]);
     };
 
-    // --- PAYMENT HANDLING ---
-    const openPaymentModal = (msg) => {
-        setPaymentModal({ isOpen: true, msg });
-    };
+    const openPaymentModal = (msg) => setPaymentModal({ isOpen: true, msg });
 
     const confirmPayment = () => {
         const { msg } = paymentModal;
-        
-        // 1. Update Message Status (Paid)
         const updatedMessages = messages.map(m => m.id === msg.id ? { ...m, isPaid: true } : m);
-        
-        // 2. Create Notification for Freelancer (UPDATED)
         const freelancerNotification = {
-            id: Date.now(),
-            toUser: msg.freelancerName, // This assumes Freelancer username is their name (demo logic). In real app use IDs.
-            // Note: Since our user object saves username as 'john' but name as 'John Doe', we need to match carefully.
-            // For this demo, we'll try to match by finding the user in 'users' array or just sending to 'freelancerName' if we used that as ID.
-            // Let's rely on the fact that we can just create the message. We'll adjust Inbox to show messages where toUser === username OR toUser === name.
-            title: "Payment Received! 💰",
-            text: `You have received a payment of RM ${msg.amount.toFixed(2)} for the project: ${msg.jobTitle}.`,
-            isActionable: false
+            id: Date.now(), toUser: msg.freelancerName, // Basic linking by name for demo
+            title: "Payment Received! 💰", text: `You received RM ${msg.amount.toFixed(2)} for ${msg.jobTitle}.`, isActionable: false
         };
-
-        // Prepend Notification + Updated List
         setMessages([freelancerNotification, ...updatedMessages]);
-        
         setPaymentModal({ isOpen: false, msg: null });
-        showToast("Payment Successful! Receipt Sent.", "success");
+        showToast("Payment Successful!", "success");
     };
 
-    // Filter messages: Check if msg.toUser matches current user's username OR name (to handle loose demo linking)
+    // Filter messages matching Username OR Name (for demo compatibility)
     const myMessages = user ? messages.filter(m => m.toUser === user.username || m.toUser === user.name) : [];
 
     return (
@@ -644,14 +539,7 @@ const App = () => {
             <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? "bg-gradient-to-br from-gray-900 via-gray-800 to-slate-900 text-white" : "bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-900"}`}>
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
                 
-                {/* PAYMENT MODAL */}
-                <PaymentModal 
-                    isOpen={paymentModal.isOpen} 
-                    onClose={() => setPaymentModal({ isOpen: false, msg: null })} 
-                    onConfirm={confirmPayment} 
-                    amount={paymentModal.msg?.amount || 0}
-                    recipient={paymentModal.msg?.freelancerName || "Freelancer"}
-                />
+                <PaymentModal isOpen={paymentModal.isOpen} onClose={() => setPaymentModal({ isOpen: false, msg: null })} onConfirm={confirmPayment} amount={paymentModal.msg?.amount || 0} recipient={paymentModal.msg?.freelancerName || "Freelancer"} />
 
                 {user && (
                     <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-200 dark:border-gray-700">
@@ -660,15 +548,13 @@ const App = () => {
                                 <div className="font-extrabold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 mr-8 cursor-pointer" onClick={() => setPage('client-home')}>GigLink</div>
                                 <button onClick={() => setPage(user.type === 'client' ? 'client-home' : 'freelancer-home')} className="text-sm font-bold hover:text-blue-500 mr-6 transition">Home</button>
                                 {user.type === 'client' && <button onClick={() => setPage('freelancer-list')} className="text-sm font-bold hover:text-blue-500 mr-6 transition">Freelancers</button>}
-                                <button onClick={() => setPage('inbox')} className="text-sm font-bold hover:text-blue-500 flex items-center mr-6 transition">
-                                    Inbox {myMessages.length > 0 && <span className="ml-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">{myMessages.length}</span>}
-                                </button>
+                                <button onClick={() => setPage('inbox')} className="text-sm font-bold hover:text-blue-500 flex items-center mr-6 transition">Inbox {myMessages.length > 0 && <span className="ml-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">{myMessages.length}</span>}</button>
                                 <button onClick={() => setPage('profile')} className="text-sm font-bold hover:text-blue-500 transition">Profile</button>
                             </div>
                             <div className="flex items-center space-x-4">
                                 <ThemeToggle isDark={isDarkMode} toggleTheme={toggleTheme} />
                                 <div className="flex items-center pl-4 border-l border-gray-300 dark:border-gray-600">
-                                    <UserAvatar seed={user.username} className="h-9 w-9 mr-3" />
+                                    <UserAvatar user={user} className="h-9 w-9 mr-3" />
                                     <span className="text-sm font-bold capitalize mr-4 hidden md:block">{user.name}</span>
                                     <button onClick={handleLogout} className="text-xs font-bold text-red-500 border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-100 transition">Log Out</button>
                                 </div>
