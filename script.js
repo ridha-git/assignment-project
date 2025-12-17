@@ -5,7 +5,6 @@
 /**
  * PATTERN 1: STRATEGY PATTERN
  * Used to calculate pricing based on complexity level.
- * Allows switching algorithms (pricing logic) easily.
  */
 class PricingStrategy {
     calculate(baseRate, hours) {
@@ -15,19 +14,19 @@ class PricingStrategy {
 
 class LowComplexityStrategy extends PricingStrategy {
     calculate(baseRate, hours) {
-        return baseRate * hours * 1.0; // Standard rate
+        return baseRate * hours * 1.0; 
     }
 }
 
 class MediumComplexityStrategy extends PricingStrategy {
     calculate(baseRate, hours) {
-        return baseRate * hours * 1.5; // 50% markup
+        return baseRate * hours * 1.5; 
     }
 }
 
 class HighComplexityStrategy extends PricingStrategy {
     calculate(baseRate, hours) {
-        return baseRate * hours * 2.5; // 150% markup for difficult tasks
+        return baseRate * hours * 2.5; 
     }
 }
 
@@ -53,7 +52,6 @@ class ServiceFactory {
 /**
  * PATTERN 3: OBSERVER PATTERN
  * Used to simulate the Notification System.
- * When an order is placed, it notifies the user via Email/WhatsApp simulation.
  */
 class NotificationService {
     constructor() {
@@ -87,13 +85,19 @@ class WhatsAppObserver {
 
 const { useState, useEffect } = React;
 
-// --- Component: Login Page ---
+// --- Component: Login Page (UPDATED: Added Password) ---
 const LoginPage = ({ onLogin }) => {
     const [username, setUsername] = useState("");
+    const [password, setPassword] = useState(""); // New State for Password
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (username) onLogin(username);
+        // Simple validation to ensure both fields are filled
+        if (username && password) {
+            onLogin(username);
+        } else {
+            alert("Please enter both username and password.");
+        }
     };
 
     return (
@@ -103,6 +107,7 @@ const LoginPage = ({ onLogin }) => {
                 <p className="text-sm text-gray-500 mb-6">Empowering the Gig Economy (SDG 8 & 9)</p>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Username Field */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Username</label>
                         <input 
@@ -114,6 +119,20 @@ const LoginPage = ({ onLogin }) => {
                             required
                         />
                     </div>
+
+                    {/* Password Field (NEW) */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Password</label>
+                        <input 
+                            type="password" 
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" 
+                            placeholder="Enter password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+
                     <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                         Login to Dashboard
                     </button>
@@ -135,7 +154,6 @@ const CalculatorPage = ({ user, onOrderCreate }) => {
     const [hours, setHours] = useState(10);
     const [price, setPrice] = useState(0);
 
-    // Calculate price dynamically using Strategy Pattern
     useEffect(() => {
         const serviceObj = ServiceFactory.createService(serviceType);
         
@@ -161,7 +179,7 @@ const CalculatorPage = ({ user, onOrderCreate }) => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-4xl mx-auto p-6 animate-fade-in">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">Project Estimator</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -212,7 +230,6 @@ const DashboardPage = ({ order, onReset }) => {
     const [logs, setLogs] = useState([]);
 
     useEffect(() => {
-        // Initialize Observer Pattern
         const notifier = new NotificationService();
         const emailSystem = new EmailObserver();
         const whatsappSystem = new WhatsAppObserver();
@@ -220,7 +237,6 @@ const DashboardPage = ({ order, onReset }) => {
         notifier.subscribe(emailSystem);
         notifier.subscribe(whatsappSystem);
 
-        // Capture notification logs
         const newLogs = [];
         notifier.observers.forEach(obs => {
             newLogs.push(obs.update(order));
@@ -229,7 +245,7 @@ const DashboardPage = ({ order, onReset }) => {
     }, [order]);
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-4xl mx-auto p-6 animate-fade-in">
             <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
                 <p className="font-bold">Success!</p>
                 <p>Order #{order.id} has been successfully created.</p>
@@ -273,6 +289,13 @@ const App = () => {
         setPage('calculator');
     };
 
+    // --- NEW: Logout Function ---
+    const handleLogout = () => {
+        setUser(null);
+        setPage('login');
+        setLastOrder(null);
+    };
+
     const handleOrderCreate = (order) => {
         setLastOrder(order);
         setPage('dashboard');
@@ -285,15 +308,24 @@ const App = () => {
 
     return (
         <div>
-            {/* Header / Navigation */}
+            {/* Header / Navigation (UPDATED: Added Logout Button) */}
             {user && (
                 <nav className="bg-white shadow mb-4">
                     <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                         <div className="font-bold text-xl text-blue-600">GigLink</div>
-                        <div className="flex space-x-4">
+                        <div className="flex items-center space-x-4">
                             <button onClick={() => setPage('calculator')} className={`text-sm ${page === 'calculator' ? 'text-blue-600 font-bold' : 'text-gray-500'}`}>Calculator</button>
                             <button onClick={() => setPage('dashboard')} disabled={!lastOrder} className={`text-sm ${page === 'dashboard' ? 'text-blue-600 font-bold' : 'text-gray-500'}`}>Dashboard</button>
-                            <span className="text-sm bg-gray-100 px-2 py-1 rounded">User: {user}</span>
+                            
+                            <div className="border-l pl-4 flex items-center space-x-3">
+                                <span className="text-sm bg-gray-100 px-2 py-1 rounded">User: {user}</span>
+                                <button 
+                                    onClick={handleLogout} 
+                                    className="text-sm text-red-600 hover:text-red-800 font-medium border border-red-200 px-3 py-1 rounded hover:bg-red-50"
+                                >
+                                    Logout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </nav>
