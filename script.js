@@ -54,25 +54,54 @@ const ThemeToggle = ({ isDark, toggleTheme }) => (
     </button>
 );
 
-// --- PAGE 1: LOGIN PAGE ---
+// --- PAGE 1: LOGIN & SIGN UP PAGE ---
 const LoginPage = ({ onLogin, isDark, toggleTheme }) => {
+    const [isRegistering, setIsRegistering] = useState(false); // Toggle between Login/Sign Up
+
+    // Login States
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
+    // Sign Up States
+    const [fullName, setFullName] = useState("");
+    const [phone, setPhone] = useState("");
+    const [email, setEmail] = useState("");
+    const [userType, setUserType] = useState("client");
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (username && password) {
-            // Create a default profile on login
-            const defaultProfile = {
-                name: username,
-                password: password,
-                email: `${username.toLowerCase()}@example.com`,
-                phone: "+6012-3456789",
-                type: "client" // Default role
-            };
-            onLogin(defaultProfile);
+        
+        if (isRegistering) {
+            // --- SIGN UP LOGIC ---
+            if (username && password && fullName && email && phone) {
+                const newUser = {
+                    name: fullName,
+                    username: username,
+                    password: password,
+                    email: email,
+                    phone: phone,
+                    type: userType
+                };
+                onLogin(newUser);
+            } else {
+                alert("Please fill in all fields to sign up.");
+            }
         } else {
-            alert("Please enter username and password.");
+            // --- LOGIN LOGIC ---
+            if (username && password) {
+                // Simulate a default profile if just logging in
+                const defaultProfile = {
+                    name: username,
+                    username: username,
+                    password: password,
+                    email: `${username.toLowerCase()}@example.com`,
+                    phone: "+6012-3456789",
+                    type: "client" // Default to client
+                };
+                onLogin(defaultProfile);
+            } else {
+                alert("Please enter username and password.");
+            }
         }
     };
 
@@ -81,14 +110,48 @@ const LoginPage = ({ onLogin, isDark, toggleTheme }) => {
             <div className="absolute top-5 right-5">
                 <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
             </div>
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-96 animate-fade-in transition-colors duration-300">
+            
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-96 animate-fade-in transition-colors duration-300 my-8">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">GigLink</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">SDG 8 & 9: Sustainable Economy</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{isRegistering ? "Create New Account" : "Welcome Back"}</p>
+                
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
-                    <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
-                    <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Login</button>
+                    {/* Common Fields */}
+                    <div>
+                        <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+                    </div>
+                    <div>
+                        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+                    </div>
+
+                    {/* Sign Up Only Fields */}
+                    {isRegistering && (
+                        <div className="space-y-4 animate-fade-in">
+                            <hr className="border-gray-200 dark:border-gray-600"/>
+                            <input type="text" placeholder="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+                            <input type="tel" placeholder="Telephone No." value={phone} onChange={e => setPhone(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+                            <input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+                            
+                            <select value={userType} onChange={e => setUserType(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                                <option value="client">I want to Hire (Client)</option>
+                                <option value="freelancer">I want to Work (Freelancer)</option>
+                            </select>
+                        </div>
+                    )}
+
+                    <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-bold">
+                        {isRegistering ? "Sign Up" : "Login"}
+                    </button>
                 </form>
+
+                <div className="mt-4 text-center">
+                    <button 
+                        onClick={() => setIsRegistering(!isRegistering)} 
+                        className="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 underline"
+                    >
+                        {isRegistering ? "Already have an account? Login" : "Don't have an account? Sign Up"}
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -147,6 +210,7 @@ const ClientPage = ({ user, onOrderCreate }) => {
     const [complexity, setComplexity] = useState('low');
     const [hours, setHours] = useState(10);
     const [price, setPrice] = useState(0);
+    const [description, setDescription] = useState(""); // NEW: Description State
 
     useEffect(() => {
         const serviceObj = ServiceFactory.createService(serviceType);
@@ -161,7 +225,8 @@ const ClientPage = ({ user, onOrderCreate }) => {
             user: user,
             email: user.email,
             service: ServiceFactory.createService(serviceType).name,
-            total: price
+            total: price,
+            description: description // NEW: Passing description to order
         });
     };
 
@@ -170,19 +235,31 @@ const ClientPage = ({ user, onOrderCreate }) => {
             <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Client Dashboard: Estimate Project</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                    <label className="block mb-2 dark:text-white">Service</label>
+                    <label className="block mb-2 dark:text-white font-semibold">Service Type</label>
                     <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white mb-4">
                         <option value="web">Web Development</option>
                         <option value="design">Graphic Design</option>
                         <option value="content">Content Writing</option>
                     </select>
-                    <label className="block mb-2 dark:text-white">Complexity</label>
+                    
+                    <label className="block mb-2 dark:text-white font-semibold">Complexity</label>
                     <select value={complexity} onChange={(e) => setComplexity(e.target.value)} className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white mb-4">
                         <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
                     </select>
-                    <label className="block mb-2 dark:text-white">Hours: {hours}</label>
-                    <input type="range" min="1" max="100" value={hours} onChange={(e) => setHours(Number(e.target.value))} className="w-full" />
+                    
+                    <label className="block mb-2 dark:text-white font-semibold">Estimated Hours: {hours}</label>
+                    <input type="range" min="1" max="100" value={hours} onChange={(e) => setHours(Number(e.target.value))} className="w-full mb-4" />
+
+                    {/* NEW: Project Description Field */}
+                    <label className="block mb-2 dark:text-white font-semibold">Project Description</label>
+                    <textarea 
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Describe the work you need (e.g., I need a responsive website for my bakery...)"
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white h-24"
+                    ></textarea>
                 </div>
+
                 <div className="bg-blue-900 text-white p-6 rounded-lg shadow-md flex flex-col justify-between">
                     <div>
                         <h3 className="text-xl font-bold">Total Estimate</h3>
@@ -242,8 +319,16 @@ const NotificationPage = ({ order, onReset }) => {
             <div className="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-100 p-4 mb-6 rounded">
                 <p className="font-bold">Order #{order.id} Success!</p>
             </div>
+            
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white border-b pb-2 mb-4">Notifications</h3>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white border-b pb-2 mb-4">Order Details</h3>
+                <div className="mb-4 text-gray-700 dark:text-gray-300">
+                    <p><strong>Service:</strong> {order.service}</p>
+                    <p><strong>Description:</strong> {order.description || "No description provided."}</p>
+                    <p><strong>Total:</strong> RM {order.total.toFixed(2)}</p>
+                </div>
+
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white border-b pb-2 mb-4">Notifications Sent</h3>
                 <ul className="space-y-3">
                     {logs.map((log, i) => (
                         <li key={i} className="flex items-center text-sm text-gray-700 dark:text-gray-300">
@@ -260,7 +345,7 @@ const NotificationPage = ({ order, onReset }) => {
 // --- MAIN APP CONTROLLER ---
 const App = () => {
     const [page, setPage] = useState('login');
-    const [user, setUser] = useState(null); // User is now an Object
+    const [user, setUser] = useState(null); 
     const [lastOrder, setLastOrder] = useState(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -268,14 +353,12 @@ const App = () => {
     
     const handleLogin = (userProfile) => {
         setUser(userProfile);
-        // Redirect based on user type
         if(userProfile.type === 'client') setPage('client-home');
         else setPage('freelancer-home');
     };
 
     const handleUpdateProfile = (updatedProfile) => {
         setUser(updatedProfile);
-        // If type changed, redirect to appropriate home
         if(updatedProfile.type === 'client') setPage('client-home');
         else setPage('freelancer-home');
     };
@@ -291,7 +374,6 @@ const App = () => {
                         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                             <div className="font-bold text-xl text-blue-600 dark:text-blue-400">GigLink</div>
                             <div className="flex items-center space-x-4">
-                                {/* Navigation Links */}
                                 <button onClick={() => setPage(user.type === 'client' ? 'client-home' : 'freelancer-home')} className="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-blue-500">Home</button>
                                 <button onClick={() => setPage('profile')} className={`text-sm font-bold ${page === 'profile' ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>Profile</button>
                                 
