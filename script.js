@@ -63,11 +63,9 @@ const ThemeToggle = ({ isDark, toggleTheme }) => (
     </button>
 );
 
-// --- PAGE 1: LOGIN & SIGN UP PAGE (STRICT VALIDATION ADDED) ---
+// --- PAGE 1: LOGIN & SIGN UP PAGE (WITH RESET BUTTON) ---
 const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme }) => {
     const [isRegistering, setIsRegistering] = useState(false);
-    
-    // Form States
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [fullName, setFullName] = useState("");
@@ -76,18 +74,23 @@ const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme }) =>
     const [userType, setUserType] = useState("client");
     const [specialization, setSpecialization] = useState("Web Development");
 
+    // --- NEW: RESET FUNCTION ---
+    const handleReset = () => {
+        if(confirm("⚠ RESET SYSTEM?\n\nThis will delete all new accounts, jobs, and messages you created.\nThe system will revert to the default Demo Accounts only.\n\nAre you sure?")) {
+            localStorage.clear(); // Clears the browser storage
+            window.location.reload(); // Reloads the page to load defaults
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
         if (isRegistering) {
-            // --- REGISTER LOGIC ---
             if (username && password && fullName && phone) {
-                // Check if username already exists
                 if (existingUsers.find(u => u.username === username)) {
-                    alert("Username already exists! Please choose another.");
+                    alert("Username already exists!");
                     return;
                 }
-
                 const newUser = {
                     name: fullName,
                     username: username,
@@ -95,15 +98,14 @@ const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme }) =>
                     email: email,
                     phone: phone,
                     type: userType,
-                    rating: "5.0", // New users start with 5.0
+                    rating: "5.0", 
                     specialization: userType === 'freelancer' ? specialization : null
                 };
                 onSignup(newUser);
             } else {
-                alert("Please fill in all fields to sign up.");
+                alert("Please fill in all fields.");
             }
         } else {
-            // --- LOGIN LOGIC (STRICT) ---
             const foundUser = existingUsers.find(
                 u => u.username === username && u.password === password
             );
@@ -111,7 +113,7 @@ const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme }) =>
             if (foundUser) {
                 onLogin(foundUser);
             } else {
-                alert("Invalid Username or Password. Please Sign Up if you don't have an account.");
+                alert("Invalid Username or Password.");
             }
         }
     };
@@ -157,7 +159,6 @@ const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme }) =>
                     {isRegistering ? "Already have an account? Login" : "Don't have an account? Sign Up"}
                 </button>
 
-                {/* Hint for testing */}
                 {!isRegistering && (
                     <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-500 dark:text-gray-400 text-center">
                         <p><strong>Demo Login:</strong></p>
@@ -165,6 +166,13 @@ const LoginPage = ({ onLogin, onSignup, existingUsers, isDark, toggleTheme }) =>
                         <p>User: john | Pass: 123</p>
                     </div>
                 )}
+
+                {/* --- RESET BUTTON --- */}
+                <div className="mt-8 border-t pt-4 text-center">
+                     <button onClick={handleReset} className="text-xs text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300">
+                        ⚠ Reset Database to Default
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -400,16 +408,15 @@ const App = () => {
     const [isDarkMode, setIsDarkMode] = useState(false);
     
     // --- PERSISTENT STATE ---
-    // 1. Jobs
     const [jobs, setJobs] = useState(() => JSON.parse(localStorage.getItem('giglink_jobs')) || []);
-    // 2. Messages
     const [messages, setMessages] = useState(() => JSON.parse(localStorage.getItem('giglink_messages')) || []);
-    // 3. Registered Users (Auth) - Pre-seeded with 2 users for testing
+    
+    // --- AUTHENTICATION STATE (With Demo Accounts) ---
     const [users, setUsers] = useState(() => JSON.parse(localStorage.getItem('giglink_users')) || [
         { name: "Demo Client", username: "client1", password: "123", email: "client@test.com", type: "client", phone: "123456" },
         { name: "John Doe", username: "john", password: "123", email: "john@test.com", type: "freelancer", phone: "123456", rating: "4.8", specialization: "Web Development" }
     ]);
-    // 4. Freelancer Directory (Synced with users)
+
     const [allFreelancers, setAllFreelancers] = useState(() => JSON.parse(localStorage.getItem('giglink_freelancers')) || [
         { name: "John Doe", rating: "4.8", specialization: "Web Development" },
         { name: "Jane Smith", rating: "4.9", specialization: "Graphic Design" }
@@ -417,7 +424,7 @@ const App = () => {
     
     const [directHireData, setDirectHireData] = useState(null);
 
-    // Save to LocalStorage
+    // Save Data
     useEffect(() => { localStorage.setItem('giglink_jobs', JSON.stringify(jobs)); }, [jobs]);
     useEffect(() => { localStorage.setItem('giglink_messages', JSON.stringify(messages)); }, [messages]);
     useEffect(() => { localStorage.setItem('giglink_users', JSON.stringify(users)); }, [users]);
@@ -431,10 +438,7 @@ const App = () => {
     };
 
     const handleSignup = (newUser) => {
-        // 1. Add to Auth Users
         setUsers([...users, newUser]);
-        
-        // 2. If Freelancer, Add to Directory
         if (newUser.type === 'freelancer') {
             setAllFreelancers([...allFreelancers, {
                 name: newUser.name,
@@ -442,8 +446,6 @@ const App = () => {
                 specialization: newUser.specialization
             }]);
         }
-        
-        // 3. Auto Login
         handleLogin(newUser);
     };
 
