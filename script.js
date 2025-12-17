@@ -67,18 +67,19 @@ const LoginPage = ({ onLogin, isDark, toggleTheme }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isRegistering) {
-            if (username && password && fullName) {
+            if (username && password && fullName && phone) {
                 onLogin({ name: fullName, username, password, email, phone, type: userType });
             } else alert("Please fill in all fields.");
         } else {
             if (username && password) {
+                // Default Profile for Demo
                 onLogin({
                     name: username,
                     username: username,
                     password: password,
                     email: `${username}@example.com`,
-                    phone: "012-3456789",
-                    type: "client" // Default fallback
+                    phone: "60123456789", // Default phone for demo
+                    type: "client" 
                 });
             } else alert("Please enter credentials.");
         }
@@ -98,7 +99,7 @@ const LoginPage = ({ onLogin, isDark, toggleTheme }) => {
                         <div className="space-y-4 animate-fade-in">
                             <hr className="dark:border-gray-600"/>
                             <input type="text" placeholder="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white" required />
-                            <input type="tel" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white" required />
+                            <input type="tel" placeholder="Phone (e.g. 6012...)" value={phone} onChange={e => setPhone(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white" required />
                             <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white" required />
                             <select value={userType} onChange={e => setUserType(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white">
                                 <option value="client">Client (Hire)</option>
@@ -140,8 +141,8 @@ const ProfilePage = ({ user, onUpdateProfile }) => {
     );
 };
 
-// --- PAGE 3: CLIENT INBOX (NEW FEATURE) ---
-const InboxPage = ({ messages }) => (
+// --- PAGE 3: CLIENT INBOX (UPDATED: WhatsApp & Payment) ---
+const InboxPage = ({ messages, onPayment }) => (
     <div className="max-w-4xl mx-auto p-6 animate-fade-in">
         <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">My Inbox</h2>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
@@ -152,10 +153,38 @@ const InboxPage = ({ messages }) => (
                     {messages.map((msg) => (
                         <li key={msg.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                             <div className="flex justify-between">
-                                <span className="font-bold text-blue-600 dark:text-blue-400">System Notification</span>
+                                <span className="font-bold text-blue-600 dark:text-blue-400">{msg.title || "Notification"}</span>
                                 <span className="text-xs text-gray-400">{new Date(msg.id).toLocaleTimeString()}</span>
                             </div>
-                            <p className="mt-1 text-gray-800 dark:text-gray-200">{msg.text}</p>
+                            <p className="mt-1 text-gray-800 dark:text-gray-200 mb-3">{msg.text}</p>
+                            
+                            {/* ACTION BUTTONS */}
+                            {msg.isActionable && (
+                                <div className="flex space-x-3 mt-2">
+                                    {/* WhatsApp Button */}
+                                    <a 
+                                        href={`https://wa.me/${msg.freelancerPhone ? msg.freelancerPhone.replace(/\D/g,'') : ''}`} 
+                                        target="_blank" 
+                                        className="flex items-center bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-2 rounded shadow transition"
+                                    >
+                                        <span className="mr-2">💬</span> Chat on WhatsApp
+                                    </a>
+
+                                    {/* Payment Button */}
+                                    {!msg.isPaid ? (
+                                        <button 
+                                            onClick={() => onPayment(msg.id)}
+                                            className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded shadow transition"
+                                        >
+                                            <span className="mr-2">💳</span> Pay RM {msg.amount.toFixed(2)}
+                                        </button>
+                                    ) : (
+                                        <span className="flex items-center text-green-600 font-bold px-4 py-2 border border-green-200 rounded bg-green-50">
+                                            ✅ Paid Successfully
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </li>
                     ))}
                 </ul>
@@ -164,7 +193,7 @@ const InboxPage = ({ messages }) => (
     </div>
 );
 
-// --- PAGE 4: CLIENT CALCULATOR ---
+// --- PAGE 4: CLIENT CALCULATOR (UPDATED: Slider Description) ---
 const ClientPage = ({ user, onOrderCreate }) => {
     const [serviceType, setServiceType] = useState('web');
     const [complexity, setComplexity] = useState('low');
@@ -187,8 +216,8 @@ const ClientPage = ({ user, onOrderCreate }) => {
             service: ServiceFactory.createService(serviceType).name,
             total: price,
             description: description,
-            status: "Open", // Initial status
-            postedBy: user.username // Track who posted it
+            status: "Open",
+            postedBy: user.username 
         });
     };
 
@@ -197,16 +226,28 @@ const ClientPage = ({ user, onOrderCreate }) => {
             <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Post a Job</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-4">
+                    <label className="block text-sm font-bold dark:text-white">Service Type</label>
                     <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white">
                         <option value="web">Web Development</option>
                         <option value="design">Graphic Design</option>
                         <option value="content">Content Writing</option>
                     </select>
+
+                    <label className="block text-sm font-bold dark:text-white">Complexity</label>
                     <select value={complexity} onChange={(e) => setComplexity(e.target.value)} className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white">
                         <option value="low">Low Complexity</option><option value="medium">Medium Complexity</option><option value="high">High Complexity</option>
                     </select>
-                    <input type="range" min="1" max="100" value={hours} onChange={(e) => setHours(Number(e.target.value))} className="w-full" />
-                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your project requirements..." className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white h-24"></textarea>
+                    
+                    {/* SLIDER WITH DESCRIPTION */}
+                    <div>
+                        <label className="block text-sm font-bold dark:text-white mb-2">Project Duration (Hours)</label>
+                        <input type="range" min="1" max="100" value={hours} onChange={(e) => setHours(Number(e.target.value))} className="w-full cursor-pointer" />
+                        <div className="bg-blue-50 dark:bg-gray-700 p-2 rounded mt-2 text-center">
+                            <span className="text-blue-800 dark:text-blue-300 font-semibold">Estimated Completion Time: {hours} Hours</span>
+                        </div>
+                    </div>
+
+                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your project requirements..." className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white h-24 mt-4"></textarea>
                 </div>
                 <div className="bg-blue-900 text-white p-6 rounded-lg shadow-md flex flex-col justify-between">
                     <div><h3 className="text-xl font-bold">Estimate</h3><p className="text-4xl font-bold mt-2">RM {price.toFixed(2)}</p></div>
@@ -217,9 +258,8 @@ const ClientPage = ({ user, onOrderCreate }) => {
     );
 };
 
-// --- PAGE 5: FREELANCER JOB BOARD (UPDATED) ---
-const FreelancerPage = ({ jobs, onAcceptJob }) => {
-    // Filter to show only 'Open' jobs
+// --- PAGE 5: FREELANCER JOB BOARD ---
+const FreelancerPage = ({ jobs, onAcceptJob, user }) => {
     const availableJobs = jobs.filter(job => job.status === "Open");
 
     return (
@@ -239,7 +279,7 @@ const FreelancerPage = ({ jobs, onAcceptJob }) => {
                             <div className="text-right">
                                 <p className="text-xl font-bold text-green-600">RM {job.total.toFixed(2)}</p>
                                 <button 
-                                    onClick={() => onAcceptJob(job.id)}
+                                    onClick={() => onAcceptJob(job.id, user)}
                                     className="mt-2 text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 shadow-lg transition transform hover:scale-105"
                                 >
                                     Accept Job
@@ -258,10 +298,6 @@ const App = () => {
     const [page, setPage] = useState('login');
     const [user, setUser] = useState(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
-    
-    // --- SHARED DATABASE (State) ---
-    // jobs: Stores all jobs created by clients
-    // messages: Stores inbox messages for clients
     const [jobs, setJobs] = useState([]); 
     const [messages, setMessages] = useState([]);
 
@@ -274,36 +310,50 @@ const App = () => {
 
     const handleLogout = () => { setUser(null); setPage('login'); };
 
-    // Client posts a job
     const handleOrderCreate = (newJob) => {
-        setJobs([...jobs, newJob]); // Add to shared job list
+        setJobs([...jobs, newJob]);
         alert("Job Posted Successfully! Freelancers can now see it.");
-        setPage('client-home'); // Stay on home page
+        setPage('client-home'); 
     };
 
     // Freelancer accepts a job
-    const handleAcceptJob = (jobId) => {
-        // 1. Update job status to 'Accepted'
+    const handleAcceptJob = (jobId, freelancerUser) => {
         const updatedJobs = jobs.map(job => 
-            job.id === jobId ? { ...job, status: 'Accepted', acceptedBy: user.name } : job
+            job.id === jobId ? { ...job, status: 'Accepted', acceptedBy: freelancerUser.name } : job
         );
         setJobs(updatedJobs);
 
-        // 2. Find the job details
         const acceptedJob = jobs.find(job => job.id === jobId);
 
-        // 3. Send message to Client's Inbox
+        // CREATE NOTIFICATION WITH ACTIONS (WhatsApp & Payment)
         const newMessage = {
             id: Date.now(),
-            toUser: acceptedJob.postedBy, // Send to the specific client
-            text: `Great news! Freelancer ${user.name} has accepted your "${acceptedJob.service}" project.`
+            toUser: acceptedJob.postedBy, 
+            title: "Job Accepted!",
+            text: `Freelancer ${freelancerUser.name} has accepted your "${acceptedJob.service}" project.`,
+            isActionable: true,
+            isPaid: false,
+            freelancerPhone: freelancerUser.phone,
+            amount: acceptedJob.total,
+            jobId: acceptedJob.id
         };
         setMessages([...messages, newMessage]);
 
         alert("Job Accepted! The client has been notified.");
     };
 
-    // Filter messages for the current logged-in user
+    // Payment Handler
+    const handlePayment = (msgId) => {
+        if(confirm("Confirm Payment? This will simulate a transaction.")) {
+            // Update message status to Paid
+            const updatedMessages = messages.map(msg => 
+                msg.id === msgId ? { ...msg, isPaid: true } : msg
+            );
+            setMessages(updatedMessages);
+            alert("Payment Successful! Receipt sent to email.");
+        }
+    };
+
     const myMessages = user ? messages.filter(m => m.toUser === user.username) : [];
 
     return (
@@ -316,7 +366,6 @@ const App = () => {
                             <div className="flex items-center space-x-4">
                                 <button onClick={() => setPage(user.type === 'client' ? 'client-home' : 'freelancer-home')} className="text-sm font-bold hover:text-blue-500">Home</button>
                                 
-                                {/* Show Inbox only for Clients */}
                                 {user.type === 'client' && (
                                     <button onClick={() => setPage('inbox')} className="text-sm font-bold hover:text-blue-500 flex items-center">
                                         Inbox 
@@ -339,8 +388,8 @@ const App = () => {
                 {page === 'login' && <LoginPage onLogin={handleLogin} isDark={isDarkMode} toggleTheme={toggleTheme} />}
                 {page === 'profile' && <ProfilePage user={user} onUpdateProfile={setUser} />}
                 {page === 'client-home' && <ClientPage user={user} onOrderCreate={handleOrderCreate} />}
-                {page === 'inbox' && <InboxPage messages={myMessages} />}
-                {page === 'freelancer-home' && <FreelancerPage jobs={jobs} onAcceptJob={handleAcceptJob} />}
+                {page === 'inbox' && <InboxPage messages={myMessages} onPayment={handlePayment} />}
+                {page === 'freelancer-home' && <FreelancerPage jobs={jobs} onAcceptJob={handleAcceptJob} user={user} />}
             </div>
         </div>
     );
